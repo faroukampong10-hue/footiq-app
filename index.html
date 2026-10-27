@@ -234,7 +234,7 @@ function nextView(){
   return '<div class="note">Live 2026/27. Probabilities for the next matches use only results already played. The model does not know about injuries, suspensions or transfers, and it is not betting advice.</div>'
    +cards
    +'<div class="sub">Pick accuracy so far: model '+(t?num(t.model_accuracy_pct).toFixed(1)+"%, market "+num(t.market_accuracy_pct).toFixed(1)+"%":"")+". Lower log loss is better.</div>"
-   +"<h3>Biggest model vs market gaps</h3><div class=\"sub\">Where the model and the bookmakers disagree most. A big gap usually means the model is missing information, not that the market is wrong.</div>"+gapHtml+"<h3>Upcoming</h3><div class=\"sub\">Bar and numbers are Home / Draw / Away %. Refreshed weekly from the latest results.</div>"+rows
+   +"<h3>Biggest model vs market gaps</h3><div class=\"sub\">Where the model and the bookmakers disagree most. A big gap usually means the model is missing information, not that the market is wrong.</div>"+(gapHtml||"<div class=\"note\">Bookmaker odds for these matches are not loaded yet. Gaps appear once the odds file is refreshed.</div>")+"<h3>Upcoming</h3><div class=\"sub\">Bar and numbers are Home / Draw / Away %. Refreshed weekly from the latest results.</div>"+rows
    +'<h3>Latest results</h3><div class="card">'+rec+"</div>";
 }
 function render(){
