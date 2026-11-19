@@ -1,5 +1,5 @@
 """FootIQ weekly update. Downloads football-data.co.uk files, runs the model, writes data.json."""
-import csv, io, json, math, random, datetime, urllib.request
+import csv, io, json, math, random, datetime, time, urllib.error, urllib.request
 from collections import defaultdict
 
 BASE = "https://www.football-data.co.uk/"
@@ -25,10 +25,23 @@ LEAGUES = {
 }
 P = dict(w=0.6, c=0.16, k=8, hf=1.16, db=0.16)   # frozen model settings
 
-def fetch_text(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 FootIQ"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return r.read().decode("utf-8-sig", errors="replace")
+AGENTS = ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36", "Mozilla/5.0 FootIQ"]
+
+def fetch_text(url, tries=3):
+    last = "unknown error"
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": AGENTS[i % len(AGENTS)]})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return r.read().decode("utf-8-sig", errors="replace")
+        except urllib.error.HTTPError as e:
+            last = "HTTP %s" % e.code
+            if e.code == 404:
+                break
+        except Exception as e:
+            last = "%s: %s" % (type(e).__name__, e)
+        time.sleep(3)
+    raise RuntimeError(last)
 
 def parse(text):
     out = []
@@ -160,27 +173,44 @@ def season_codes(today):
 
 def main(get=fetch_text, today=None, out_path="data.json"):
     today = today or datetime.datetime.utcnow()
+    log = []
+    def say(m):
+        print(m); log.append(m)
+    try:
+        with open(out_path, encoding="utf-8") as f:
+            old = json.load(f).get("leagues", {})
+    except Exception:
+        old = {}
     try:
         fixtures = list(csv.DictReader(io.StringIO(get(BASE + "fixtures.csv"))))
+        say("fixtures.csv: %d rows" % len(fixtures))
     except Exception as e:
-        print("fixtures.csv not available:", e); fixtures = []
+        say("fixtures.csv not available: %s" % e); fixtures = []
+    (s0, c0), (s1, c1) = season_codes(today)
+    label = "%d/%02d" % (s0, (s0 + 1) % 100)
     result = {}
     for key, C in LEAGUES.items():
-        (s0, c0), (s1, c1) = season_codes(today)
         cur = None
-        for cc, pc in ((c0, c1), (c1, "%02d%02d" % (int(c1[:2]) - 1, int(c1[:2])))):
-            try:
-                cur = parse(get("%smmz4281/%s/%s.csv" % (BASE, cc, C["f"]))); prev = parse(get("%smmz4281/%s/%s.csv" % (BASE, pc, C["f"]))); break
-            except Exception as e:
-                print(key, "download failed for", cc, e); cur = None
+        try:
+            cur = parse(get("%smmz4281/%s/%s.csv" % (BASE, c0, C["f"])))
+            prev = parse(get("%smmz4281/%s/%s.csv" % (BASE, c1, C["f"])))
+        except Exception as e:
+            say("%s: download failed (%s)" % (C["name"], e)); cur = None
         if not cur or len(cur) < 10:
-            print(key, "skipped: not enough current-season matches yet"); continue
+            if cur is not None:
+                say("%s: only %d matches in the %s file, too early to model" % (C["name"], len(cur), label))
+            if key in old:
+                result[key] = old[key]; say("%s: kept the previous data" % C["name"])
+            else:
+                say("%s: skipped" % C["name"])
+            continue
         result[key] = build(key, cur, prev, fixtures)
-        print(key, C["name"], "matches", len(cur), "upcoming", len(result[key]["up"]))
+        result[key]["season"] = label
+        say("%s: %d matches, %d upcoming, season %s" % (C["name"], len(cur), len(result[key]["up"]), label))
     if not result:
         raise SystemExit("No league could be built, keeping the old data.json")
     with open(out_path, "w", encoding="utf-8") as f:
-        json.dump({"asof": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"), "leagues": result}, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump({"asof": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"), "log": log, "leagues": result}, f, ensure_ascii=False, separators=(",", ":"))
     print("wrote", out_path)
 
 if __name__ == "__main__":
