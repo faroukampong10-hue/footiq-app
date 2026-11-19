@@ -2,7 +2,7 @@ name: Update FootIQ data
 
 on:
   schedule:
-    - cron: "30 7 * * 2,5"
+    - cron: "30 7,19 * * *"
   workflow_dispatch:
 
 permissions:
