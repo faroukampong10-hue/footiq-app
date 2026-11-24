@@ -244,6 +244,40 @@ if(S.tab==="home"||S.tab==="matches"){const c=v.querySelector(".chips");if(c){c.
 const R0=render;render=function(){R0();try{post()}catch(e){}};
 setInterval(tick,5000);
 document.addEventListener("visibilitychange",()=>{if(want()&&Date.now()-LVTRY>=30000)load()});
+})();/* FootIQ add-on 2: live scores for more competitions */
+(function(){
+const XC=[["CL","Champions League"],["FL1","Ligue 1"],["ELC","Championship"],["DED","Eredivisie"],["PPL","Primeira Liga"]];
+const LIVE=s=>s==="IN_PLAY"||s==="PAUSED"||s==="EXTRA_TIME"||s==="PENALTY_SHOOTOUT";
+let XV=null,XTRY=0,busy=false;
+const nm=x=>esc2(q(String(x||"").replace(/ (FC|AFC|CF)$/,"")));
+function lab(m){const s=m.status;
+if(LIVE(s))return s==="PAUSED"?["HT","var(--am)"]:["LIVE","var(--ac)"];
+if(s==="FINISHED"||s==="AWARDED")return["FT","var(--mu)"];
+if(s==="TIMED"||s==="SCHEDULED"){const d=new Date(m.utc_date);return[isNaN(d)?"TBC":d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),"var(--mu)"]}
+if(s==="POSTPONED")return["PP","var(--bad)"];
+if(s==="SUSPENDED")return["SUSP","var(--bad)"];
+if(s==="CANCELLED")return["CXL","var(--bad)"];
+return[String(s||"?"),"var(--mu)"]}
+function pick(rows){const t=Date.now(),k=r=>Math.abs(Date.parse(r.utc_date)-t)||0,L=rows.filter(r=>LIVE(r.status)).length,n=L>=4?Math.min(L,12):4;
+return rows.slice().sort((a,b)=>(LIVE(b.status)-LIVE(a.status))||k(a)-k(b)).slice(0,n).sort((a,b)=>(LIVE(b.status)-LIVE(a.status))||Date.parse(a.utc_date)-Date.parse(b.utc_date))}
+function row(m){const s=lab(m),d=new Date(m.utc_date),same=!isNaN(d)&&d.toDateString()===new Date().toDateString();
+const sc=m.home_goals==null||m.away_goals==null?"v":m.home_goals+" \u2013 "+m.away_goals;
+return'<div class="row" style="cursor:default"><span style="width:46px;flex:none"><b style="font-size:12px;color:'+s[1]+'">'+esc2(s[0])+"</b>"+(same||isNaN(d)?"":'<br><span class="s">'+d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})+"</span>")+'</span><span style="flex:1;font-size:13px;font-weight:600">'+nm(m.home)+'</span><b style="font-size:15px">'+sc+'</b><span style="flex:1;text-align:right;font-size:13px;font-weight:600">'+nm(m.away)+"</span></div>"}
+function html(){if(!XV)return"";let h="";
+XC.forEach(c=>{const all=XV.filter(r=>r.comp===c[0]);if(!all.length)return;const rows=pick(all),n=rows.filter(r=>LIVE(r.status)).length;
+h+=hd(c[1],n?n+" in play":"")+card(rows.map(row).join(""))});
+return h?h+'<div class="s" style="margin-top:6px">Live scores only for these competitions, with no predictions.</div>':""}
+function paint(){const el=document.getElementById("live2");if(el)el.innerHTML=html()}
+async function load(){if(busy)return;busy=true;XTRY=Date.now();const c=new AbortController(),to=setTimeout(()=>c.abort(),8000);
+try{const r=await fetch(SB.url+"/rest/v1/live_board?select=comp,utc_date,status,home,away,home_goals,away_goals&comp=in.("+XC.map(x=>x[0]).join(",")+")&order=utc_date.asc&limit=200",{headers:{apikey:SB.key},signal:c.signal});
+if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();if(!Array.isArray(j))throw new Error("bad data");XV=j}catch(e){}
+clearTimeout(to);busy=false;paint()}
+const want=()=>(S.tab==="home"||S.tab==="matches")&&document.visibilityState==="visible";
+function post(){if(S.tab!=="home"&&S.tab!=="matches")return;const v=document.getElementById("v"),a=document.getElementById("live")||v.querySelector(".chips");
+if(!a)return;a.insertAdjacentHTML("afterend",'<div id="live2"></div>');paint();if(Date.now()-XTRY>=30000)load()}
+const R1=render;render=function(){R1();try{post()}catch(e){}};
+setInterval(()=>{if(want()&&Date.now()-XTRY>=30000)load()},5000);
+document.addEventListener("visibilitychange",()=>{if(want()&&Date.now()-XTRY>=30000)load()});
 })();
 init();
 </script>
