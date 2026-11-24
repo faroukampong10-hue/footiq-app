@@ -194,7 +194,57 @@ function render(){document.getElementById("n").innerHTML=TABS.map(t=>'<button da
 document.addEventListener("click",e=>{const lg=e.target.closest("[data-lg]"),ac=e.target.closest("[data-act]"),sm=e.target.closest("[data-sim]"),pr=e.target.closest("[data-p]"),tm=e.target.closest("[data-tm]"),t=e.target.closest("[data-t]"),o=e.target.closest("[data-o]"),v=e.target.closest("[data-v]");
  if(lg){switchLeague(lg.dataset.lg)}else if(ac){act(ac.dataset.act,ac.dataset.id)}else if(sm){S.sim={i:+sm.dataset.sim,ah:0,dh:0,aa:0,da:0,hf:1.16};S.tab="sim";window.scrollTo(0,0);render()}else if(pr){const i=S.sim.i,P={ha:{ah:-15},aa:{aa:-15},hd:{dh:-10},nh:{hf:1},r:{}};S.sim=Object.assign({i,ah:0,dh:0,aa:0,da:0,hf:1.16},P[pr.dataset.p]);render()}else if(tm){S.team=tm.dataset.tm;S.tab="team";window.scrollTo(0,0);render()}else if(t){S.tab=t.dataset.t;window.scrollTo(0,0);render()}else if(v){S.view=v.dataset.v;render()}else if(o){const k=o.dataset.o;S.open=S.open===k?null:k;render()}});
 document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k||!S.sim)return;S.sim[k]=+e.target.value;document.getElementById("v_"+k).textContent=k==="hf"?S.sim[k].toFixed(2):sg(S.sim[k])+"%";document.getElementById("simres").innerHTML=simRes()});
-async function init(){document.getElementById("v").innerHTML='<p class="s">Loading\u2026</p>';try{const r=await fetch("data.json?"+Date.now());if(!r.ok)throw new Error("data.json not found ("+r.status+")");const j=await r.json();LG=j.leagues;AS=j.asof||"";const ks=Object.keys(LG);K=LG[K]?K:ks[0];D=LG[K];CODE=D.codes;build();render()}catch(e){document.getElementById("v").innerHTML='<div class="note">Could not load data: '+esc2(e.message)+"</div>";return}sbInit()}
+async function init(){document.getElementById("v").innerHTML='<p class="s">Loading\u2026</p>';try{const r=await fetch("data.json?"+Date.now());if(!r.ok)throw new Error("data.json not found ("+r.status+")");const j=await r.json();LG=j.leagues;AS=j.asof||"";const ks=Object.keys(LG);K=LG[K]?K:ks[0];D=LG[K];CODE=D.codes;build();render()}catch(e){document.getElementById("v").innerHTML='<div class="note">Could not load data: '+esc2(e.message)+"</div>";return}sbInit()}/* FootIQ add-on: live scores, 1st/2nd/3rd fix, season label, old-data warning */
+(function(){
+const COMP={pl:"PL",sp:"PD",it:"SA",de:"BL1"};
+const LIVE=s=>s==="IN_PLAY"||s==="PAUSED"||s==="EXTRA_TIME"||s==="PENALTY_SHOOTOUT";
+let LV=null,LVERR="",LVTRY=0,busy=false;
+const og=n=>{const a=n%100;return n+(a>=11&&a<=13?"th":["th","st","nd","rd"][n%10]||"th")};
+function asofMs(s){const m=/^(\d{4}-\d\d-\d\d) (\d\d:\d\d)/.exec(s||"");return m?Date.parse(m[1]+"T"+m[2]+":00Z"):NaN}
+function ago(ms){const s=Math.max(0,Math.round(ms/1000));return s<60?s+"s ago":s<3600?Math.floor(s/60)+"m ago":s<86400?Math.floor(s/3600)+"h ago":Math.floor(s/86400)+"d ago"}
+function stale(){const t=asofMs(AS);if(isNaN(t))return"The data date is missing, so these numbers may be out of date.";const d=(Date.now()-t)/864e5;return d>3?"The match data is "+Math.floor(d)+" days old (last update "+esc2(AS)+"). The update job may have stopped, so these numbers may be out of date.":""}
+function lead(){const r=D&&D.rec;if(!r)return"";const d=r.kl-r.ml;return"Lower log loss is better. "+(Math.abs(d)<0.01?"On "+r.n+" matches the model and the market are level. A gap this small means nothing.":d>0?"On "+r.n+" matches the model is slightly ahead, but that is a small sample and not an edge.":"The market is ahead of the model.")+" Simulations and probabilities use results and shots only."}
+function lab(m){const s=m.status;
+if(LIVE(s))return s==="PAUSED"?["HT","var(--am)"]:["LIVE","var(--ac)"];
+if(s==="FINISHED"||s==="AWARDED")return["FT","var(--mu)"];
+if(s==="TIMED"||s==="SCHEDULED"){const d=new Date(m.utc_date);return[isNaN(d)?"TBC":d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),"var(--mu)"]}
+if(s==="POSTPONED")return["PP","var(--bad)"];
+if(s==="SUSPENDED")return["SUSP","var(--bad)"];
+if(s==="CANCELLED")return["CXL","var(--bad)"];
+return[String(s||"?"),"var(--mu)"]}
+function pick(rows){const t=Date.now(),k=r=>Math.abs(Date.parse(r.utc_date)-t)||0;
+return rows.slice().sort((a,b)=>(LIVE(b.status)-LIVE(a.status))||k(a)-k(b)).slice(0,8).sort((a,b)=>(LIVE(b.status)-LIVE(a.status))||Date.parse(a.utc_date)-Date.parse(b.utc_date))}
+function row(m){const s=lab(m),d=new Date(m.utc_date),same=!isNaN(d)&&d.toDateString()===new Date().toDateString();
+const sc=m.home_goals==null||m.away_goals==null?"v":m.home_goals+" \u2013 "+m.away_goals;
+return'<div class="row" style="cursor:default"><span style="width:46px;flex:none"><b style="font-size:12px;color:'+s[1]+'">'+esc2(s[0])+"</b>"+(same||isNaN(d)?"":'<br><span class="s">'+d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})+"</span>")+'</span><span style="flex:1;font-size:13px;font-weight:600">'+esc2(q(m.home))+'</span><b style="font-size:15px">'+sc+'</b><span style="flex:1;text-align:right;font-size:13px;font-weight:600">'+esc2(q(m.away))+"</span></div>"}
+function liveHTML(){const all=LV||[],rows=pick(all.filter(r=>r.comp===COMP[K])),n=rows.filter(r=>LIVE(r.status)).length;let body;
+if(!LV)body=LVERR?'<div class="s">Live feed unavailable ('+esc2(LVERR)+"). Scores will appear when it reconnects.</div>":'<div class="s">Loading live scores\u2026</div>';
+else if(!rows.length)body='<div class="s">No matches for this league between yesterday and tomorrow.</div>';
+else body=rows.map(row).join("");
+let ft="";
+if(LV){const mx=Math.max.apply(null,all.map(r=>Date.parse(r.updated_at)).filter(x=>x>0));
+if(mx>0){const age=Date.now()-mx;ft="Live feed updated "+ago(age)+(LVERR?" \u00b7 could not refresh just now":"")+". Free feed: scores can run about 5 minutes behind.";
+if(all.some(r=>LIVE(r.status))&&age>300000)ft='<span style="color:var(--bad)">Feed looks delayed: last update '+ago(age)+".</span> Scores may be wrong."+(LVERR?" Could not refresh just now.":"")}}
+return hd("Live scores",n?n+" in play":"")+card(body)+(ft?'<div class="s" style="margin-top:6px">'+ft+"</div>":"")}
+function paint(){const el=document.getElementById("live");if(el)el.innerHTML=liveHTML()}
+async function load(){if(busy)return;busy=true;LVTRY=Date.now();const c=new AbortController(),to=setTimeout(()=>c.abort(),8000);
+try{const r=await fetch(SB.url+"/rest/v1/live_board?select=comp,utc_date,status,home,away,home_goals,away_goals,updated_at&order=utc_date.asc&limit=200",{headers:{apikey:SB.key},signal:c.signal});
+if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();if(!Array.isArray(j))throw new Error("bad data");LV=j;LVERR=""}
+catch(e){LVERR=e&&e.name==="AbortError"?"timed out":String(e&&e.message||e)}
+clearTimeout(to);busy=false;paint()}
+const want=()=>(S.tab==="home"||S.tab==="matches")&&document.visibilityState==="visible";
+function tick(){if(!want())return;if(Date.now()-LVTRY>=30000)load();else paint()}
+function post(){const v=document.getElementById("v"),sub=v.querySelector(".s");if(!sub||!D)return;
+const w=document.createTreeWalker(v,NodeFilter.SHOW_TEXT);let t;while(t=w.nextNode()){if(/\dth \u00b7 /.test(t.nodeValue))t.nodeValue=t.nodeValue.replace(/(\d+)th( \u00b7 )/g,(m,n,r)=>og(+n)+r)}
+if(S.tab!=="tracker"){
+if(D.season&&sub.textContent.indexOf(D.season)<0)sub.textContent+=" \u00b7 season "+D.season;
+const m=stale();if(m)sub.insertAdjacentHTML("afterend",'<div class="note" style="border-color:var(--bad);color:var(--bad)">'+m+"</div>")}
+v.querySelectorAll(".note").forEach(n=>{if(n.textContent.indexOf("The market is still slightly ahead of the model")>=0)n.textContent=lead()});
+if(S.tab==="home"||S.tab==="matches"){const c=v.querySelector(".chips");if(c){c.insertAdjacentHTML("afterend",'<div id="live"></div>');paint();if(Date.now()-LVTRY>=30000)load()}}}
+const R0=render;render=function(){R0();try{post()}catch(e){}};
+setInterval(tick,5000);
+document.addEventListener("visibilitychange",()=>{if(want()&&Date.now()-LVTRY>=30000)load()});
+})();
 init();
 </script>
 </body>
