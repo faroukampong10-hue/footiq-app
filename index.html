@@ -277,7 +277,55 @@ function post(){if(S.tab!=="home"&&S.tab!=="matches")return;const v=document.get
 if(!a)return;a.insertAdjacentHTML("afterend",'<div id="live2"></div>');paint();if(Date.now()-XTRY>=30000)load()}
 const R1=render;render=function(){R1();try{post()}catch(e){}};
 setInterval(()=>{if(want()&&Date.now()-XTRY>=30000)load()},5000);
-document.addEventListener("visibilitychange",()=>{if(want()&&Date.now()-XTRY>=30000)load()});
+document.addEventListener("visibilitychange",()=>{if(want()&&Date.now()-XTRY>=30000)load()});/* FootIQ add-on 3: Scores tab with day bar, all competitions, predictions where the model has them */
+(function(){
+const CO=[["CL","Champions League"],["PL","Premier League"],["PD","La Liga"],["SA","Serie A"],["BL1","Bundesliga"],["FL1","Ligue 1"],["ELC","Championship"],["DED","Eredivisie"],["PPL","Primeira Liga"]];
+const KOF={PL:"pl",PD:"sp",SA:"it",BL1:"de"};
+const LIVE=s=>s==="IN_PLAY"||s==="PAUSED"||s==="EXTRA_TIME"||s==="PENALTY_SHOOTOUT";
+let SD=0;const SC={};
+const nm=x=>esc2(q(String(x||"").replace(/ (FC|AFC|CF)$/,"")));
+function ago(ms){const s=Math.max(0,Math.round(ms/1000));return s<60?s+"s ago":s<3600?Math.floor(s/60)+"m ago":s<86400?Math.floor(s/3600)+"h ago":Math.floor(s/86400)+"d ago"}
+function dayStart(o){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+o);return d}
+function dayLabel(o){return o===0?"Today":o===1?"Tomorrow":o===-1?"Yesterday":dayStart(o).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
+function lab(m){const s=m.status;
+if(LIVE(s))return s==="PAUSED"?["HT","var(--am)"]:["LIVE","var(--ac)"];
+if(s==="FINISHED"||s==="AWARDED")return["FT","var(--mu)"];
+if(s==="TIMED"||s==="SCHEDULED"){const d=new Date(m.utc_date);return[isNaN(d)?"TBC":d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),"var(--mu)"]}
+if(s==="POSTPONED")return["PP","var(--bad)"];
+if(s==="SUSPENDED")return["SUSP","var(--bad)"];
+if(s==="CANCELLED")return["CXL","var(--bad)"];
+return[String(s||"?"),"var(--mu)"]}
+function pred(m){if(m.status!=="TIMED"&&m.status!=="SCHEDULED")return"";const k=KOF[m.comp],L=k&&LG[k];const u=L&&L.up&&L.up.find(x=>x[2]===m.home&&x[3]===m.away);if(!u)return"";
+return'<div style="flex-basis:100%;padding-left:54px"><div style="max-width:220px">'+bar(u[4],u[5],u[6],6)+'</div><div class="s">Model: home '+Math.round(u[4])+"% \u00b7 draw "+Math.round(u[5])+"% \u00b7 away "+Math.round(u[6])+"%</div></div>"}
+function row(m){const s=lab(m),sc=m.home_goals==null||m.away_goals==null?"v":m.home_goals+" \u2013 "+m.away_goals;
+return'<div class="row" style="cursor:default;flex-wrap:wrap"><span style="width:46px;flex:none"><b style="font-size:12px;color:'+s[1]+'">'+esc2(s[0])+'</b></span><span style="flex:1;font-size:13px;font-weight:600">'+nm(m.home)+'</span><b style="font-size:15px">'+sc+'</b><span style="flex:1;text-align:right;font-size:13px;font-weight:600">'+nm(m.away)+"</span>"+pred(m)+"</div>"}
+function dayBar(){return'<div class="chips" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px">'+[-2,-1,0,1,2,3,4,5,6,7].map(o=>'<button data-sd="'+o+'" class="'+(o===SD?"on":"")+'" style="flex:none;white-space:nowrap">'+dayLabel(o)+"</button>").join("")+"</div>"}
+function paint(){const el=document.getElementById("sc");if(!el)return;const c=SC[SD];let h="";
+if(!c||!c.rows)h=c&&c.err?'<div class="note">Scores unavailable ('+esc2(c.err)+"). Trying again shortly.</div>":'<div class="s" style="margin-top:12px">Loading scores\u2026</div>';
+else{if(!c.rows.length)h='<div class="note">No matches in these competitions on this day.</div>';
+else CO.forEach(co=>{const rs=c.rows.filter(r=>r.comp===co[0]);if(!rs.length)return;const n=rs.filter(r=>LIVE(r.status)).length;h+=hd(co[1],n?n+" in play":rs.length+(rs.length>1?" matches":" match"))+card(rs.map(row).join(""))});
+const mx=Math.max.apply(null,c.rows.map(r=>Date.parse(r.updated_at)).filter(x=>x>0));
+h+='<div class="s" style="margin-top:8px">'+(mx>0?"Feed updated "+ago(Date.now()-mx)+(c.err?" \u00b7 could not refresh just now":"")+". ":"")+"Free feed: scores can run about 5 minutes behind. Kick-off times are in your local time.</div>"}
+el.innerHTML=h}
+async function load(o){const c=SC[o]||(SC[o]={rows:null,t:0,err:"",busy:false});if(c.busy)return;c.busy=true;c.t=Date.now();const ac=new AbortController(),to=setTimeout(()=>ac.abort(),8000);
+try{const r=await fetch(SB.url+"/rest/v1/live_board?select=comp,utc_date,status,home,away,home_goals,away_goals,updated_at&utc_date=gte."+encodeURIComponent(dayStart(o).toISOString())+"&utc_date=lt."+encodeURIComponent(dayStart(o+1).toISOString())+"&order=utc_date.asc&limit=300",{headers:{apikey:SB.key},signal:ac.signal});
+if(!r.ok)throw new Error("HTTP "+r.status);const j=await r.json();if(!Array.isArray(j))throw new Error("bad data");c.rows=j;c.err=""}
+catch(e){c.err=e&&e.name==="AbortError"?"timed out":String(e&&e.message||e)}
+clearTimeout(to);c.busy=false;if(S.tab==="scores"&&o===SD)paint()}
+function page(){document.getElementById("v").innerHTML="<h1>Foot<b>IQ</b></h1><div class='s'>Scores \u00b7 all competitions</div>"+dayBar()+'<div id="sc"></div>';
+const b=document.querySelector('[data-sd="'+SD+'"]');if(b&&b.parentNode)b.parentNode.scrollLeft=b.offsetLeft-b.parentNode.clientWidth/2+b.offsetWidth/2;
+paint();const c=SC[SD];if(!c||Date.now()-c.t>=30000)load(SD)}
+TABS.splice(1,0,["scores","Scores","M4 6h16v14H4zM4 11h16M9 3v4M15 3v4"]);
+const R2=render;
+render=function(){if(S.tab!=="scores"){R2();return}
+S.tab="matches";try{R2()}finally{S.tab="scores"}
+document.querySelectorAll("#n button").forEach(b=>b.classList.toggle("on",b.dataset.t==="scores"));
+try{page()}catch(e){}};
+document.addEventListener("click",e=>{const b=e.target.closest("[data-sd]");if(!b)return;SD=+b.dataset.sd;
+document.querySelectorAll("[data-sd]").forEach(x=>x.classList.toggle("on",x===b));paint();const c=SC[SD];if(!c||Date.now()-c.t>=30000)load(SD)});
+setInterval(()=>{if(S.tab!=="scores"||document.visibilityState!=="visible")return;const c=SC[SD],age=Date.now()-(c?c.t:0);if(age>=(SD===0||SD===-1?30000:120000))load(SD);else paint()},5000);
+document.addEventListener("visibilitychange",()=>{if(S.tab==="scores"&&document.visibilityState==="visible"){const c=SC[SD];if(!c||Date.now()-c.t>=30000)load(SD)}});
+})();
 })();
 init();
 </script>
