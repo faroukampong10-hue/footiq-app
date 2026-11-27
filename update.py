@@ -30,7 +30,12 @@ LEAGUES = {
  nm={"For Sittard":"Fortuna Sittard","Go Ahead Eagles":"Go Ahead Eagles","Nijmegen":"NEC Nijmegen","Sp Rotterdam":"Sparta Rotterdam","Zwolle":"PEC Zwolle","Den Haag":"ADO Den Haag","PSV Eindhoven":"PSV"},
    codes={"ADO Den Haag":"ADO","Ajax":"AJA","AZ Alkmaar":"AZ","Cambuur":"CAM","Excelsior":"EXC","Feyenoord":"FEY","Fortuna Sittard":"FOR","Go Ahead Eagles":"GAE","Groningen":"GRO","Heerenveen":"HEE","NEC Nijmegen":"NEC","PEC Zwolle":"ZWO","PSV":"PSV","Sparta Rotterdam":"SPA","Telstar":"TEL","Twente":"TWE","Utrecht":"UTR","Willem II":"WIL"},
    histTitle="Check on Eredivisie",
-   histNote="Eredivisie was added later, so there is only the check on this season so far. The settings were tuned on Premier League data and use the 18-club, 34-game format with last season's goal level. The relegation chance counts the bottom two only, not the play-off place. Treat this as a small sample."),
+   histNote="Eredivisie was added later, so there is only the check on this season so far. The settings were tuned on Premier League data and use the 18-club, 34-game format with last season's goal level. The relegation chance counts the bottom two only, not the play-off place. Treat this as a small sample."), "pt": dict(name="Primeira Liga", f="P1", ng=34.0, prom=29.5, nrel=2, seed=29, lmode="prev",
+   nm={"Sp Lisbon":"Sporting CP","Sp Braga":"Braga","Guimaraes":"Vitória SC","Estrela":"Estrela Amadora","Nacional":"CD Nacional","Maritimo":"Marítimo","Pacos Ferreira":"Paços de Ferreira"},
+   codes={"Alverca":"ALV","Arouca":"ARO","Benfica":"BEN","Braga":"BRA","Casa Pia":"CAS","CD Nacional":"NAC","Estoril":"EST","Estrela Amadora":"EAM","Famalicão":"FAM","Gil Vicente":"GIL","Marítimo":"MAR","Moreirense":"MOR","Paços de Ferreira":"PAC","Porto":"POR","Rio Ave":"RIO","Santa Clara":"SAN","Sporting CP":"SCP","Vitória SC":"VSC"},
+   histTitle="Check on Primeira Liga",
+   histNote="Primeira Liga was added later, so there is only the check on this season so far. The settings were tuned on Premier League data and use the 18-club, 34-game format with last season's goal level. The relegation chance counts the bottom two only, not the play-off place. Treat this as a small sample."),
+
 }
 P = dict(w=0.6, c=0.16, k=8, hf=1.16, db=0.16)   # frozen model settings
 
