@@ -246,7 +246,7 @@ setInterval(tick,5000);
 document.addEventListener("visibilitychange",()=>{if(want()&&Date.now()-LVTRY>=30000)load()});
 })();/* FootIQ add-on 2: live scores for more competitions */
 (function(){
-const XC=[["CL","Champions League"],["FL1","Ligue 1"],["ELC","Championship"],["DED","Eredivisie"],["PPL","Primeira Liga"]];
+const XC=[["CL","Champions League"],["ELC","Championship"],["DED","Eredivisie"],["PPL","Primeira Liga"]];
 const LIVE=s=>s==="IN_PLAY"||s==="PAUSED"||s==="EXTRA_TIME"||s==="PENALTY_SHOOTOUT";
 let XV=null,XTRY=0,busy=false;
 const nm=x=>esc2(q(String(x||"").replace(/ (FC|AFC|CF)$/,"")));
