@@ -295,7 +295,7 @@ if(s==="POSTPONED")return["PP","var(--bad)"];
 if(s==="SUSPENDED")return["SUSP","var(--bad)"];
 if(s==="CANCELLED")return["CXL","var(--bad)"];
 return[String(s||"?"),"var(--mu)"]}
-function pred(m){if(m.status!=="TIMED"&&m.status!=="SCHEDULED")return"";const k=KOF[m.comp],L=k&&LG[k];const u=L&&L.up&&L.up.find(x[2]===(NL_FIX[m.home]||m.home)&&x[3]===(NL_FIX[m.away]||m.away)
+function pred(m){if(m.status!=="TIMED"&&m.status!=="SCHEDULED")return"";const k=KOF[m.comp],L=k&&LG[k];const u=L&&L.up&&L.up.find(x=>x[2]===(NL_FIX[m.home]||m.home)&&x[3]===(NL_FIX[m.away]||m.away)
 );if(!u)return"";
 return'<div style="flex-basis:100%;padding-left:54px"><div style="max-width:220px">'+bar(u[4],u[5],u[6],6)+'</div><div class="s">Model: home '+Math.round(u[4])+"% \u00b7 draw "+Math.round(u[5])+"% \u00b7 away "+Math.round(u[6])+"%</div></div>"}
 function row(m){const s=lab(m),sc=m.home_goals==null||m.away_goals==null?"v":m.home_goals+" \u2013 "+m.away_goals;
