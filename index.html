@@ -280,7 +280,7 @@ setInterval(()=>{if(want()&&Date.now()-XTRY>=30000)load()},5000);
 document.addEventListener("visibilitychange",()=>{if(want()&&Date.now()-XTRY>=30000)load()});/* FootIQ add-on 3: Scores tab with day bar, all competitions, predictions where the model has them */
 (function(){
 const CO=[["CL","Champions League"],["PL","Premier League"],["PD","La Liga"],["SA","Serie A"],["BL1","Bundesliga"],["ELC","Championship"],["DED","Eredivisie"],["PPL","Primeira Liga"]];
-const KOF={PL:"pl",PD:"sp",SA:"it",BL1:"de",FL1:"fr",DED:"nl" ,PPL:"pt",ELC:"en2"};
+const KOF={PL:"pl",PD:"sp",SA:"it",BL1:"de",FL1:"fr",DED:"nl" ,PPL:"pt"ELC:"en2"};
 const LIVE=s=>s==="IN_PLAY"||s==="PAUSED"||s==="EXTRA_TIME"||s==="PENALTY_SHOOTOUT";
 let SD=0;const SC={};const NL_FIX={"FC Groningen":"Groningen","Willem II Tilburg":"Willem II","SBV Excelsior":"Excelsior","Telstar 1963":"Telstar","SC Cambuur-Leeuwarden":"Cambuur","SC Heerenveen":"Heerenveen","Feyenoord Rotterdam":"Feyenoord","AFC Ajax":"Ajax","FC Utrecht":"Utrecht","FC Twente":"Twente","FC Volendam":"Volendam","Heracles Almelo":"Heracles","RKC Waalwijk":"RKC Waalwijk","CS Marítimo":"Marítimo","FC Porto":"Porto","SL Benfica":"Benfica","SC Braga":"Braga","FC Arouca":"Arouca","FC Famalicão":"Famalicão","Moreirense FC":"Moreirense","Rio Ave FC":"Rio Ave","CD Santa Clara":"Santa Clara","GD Estoril Praia":"Estoril","CF Estrela da Amadora":"Estrela Amadora","FC Alverca":"Alverca","Académico de Viseu FC":"Academico Viseu"};
 const nm=x=>esc2(q(String(x||"").replace(/ (FC|AFC|CF)$/,"")));
