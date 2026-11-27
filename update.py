@@ -22,6 +22,10 @@ LEAGUES = {
    codes={"Augsburg":"AUG","Bayern Munich":"BAY","Dortmund":"BVB","Eintracht Frankfurt":"SGE","Elversberg":"ELV","K\u00f6ln":"KOE","Freiburg":"FRE","Hamburger SV":"HSV","Hoffenheim":"HOF","Leverkusen":"LEV","Gladbach":"BMG","Mainz":"MAI","Paderborn":"PAD","RB Leipzig":"RBL","Schalke 04":"S04","Stuttgart":"VFB","Union Berlin":"UNI","Werder Bremen":"BRE"},
    hist0=["2025/26 full season, no prior","0.997","0.953"], histTitle="Checks on the Bundesliga",
    histNote="The settings were tuned on Premier League data. The goal level comes from last season\u2019s average and the 34-game season is allowed for. The market scored better in both checks. The relegation chance counts the bottom two only, not the play-off place."),
+ "fr": dict(name="Ligue 1", f="F1", ng=34.0, prom=29.5, nrel=2, seed=19, lmode="prev", nm={},
+   codes={"Angers":"ANG","Auxerre":"AUX","Brest":"BRE","Le Havre":"HAV","Le Mans":"LMN","Lens":"LEN","Lille":"LIL","Lorient":"LOR","Lyon":"LYO","Marseille":"MAR","Monaco":"MON","Nice":"NIC","Paris FC":"PFC","Paris SG":"PSG","Rennes":"REN","Strasbourg":"STR","Toulouse":"TOU","Troyes":"TRO"},
+   histTitle="Check on Ligue 1",
+   histNote="Ligue 1 was added later, so there is only the check on this season so far. The settings were tuned on Premier League data and are copied from the Bundesliga, which also has 18 clubs and 34 games. The goal level comes from last season\u2019s average. The relegation chance counts the bottom two only, not the play-off place. Treat this as a small sample."),
 }
 P = dict(w=0.6, c=0.16, k=8, hf=1.16, db=0.16)   # frozen model settings
 
@@ -161,7 +165,7 @@ def build(key, cur, prev, fixtures):
     codes = dict(C["codes"])
     for t in sim:
         codes.setdefault(t, t.replace(" ", "")[:3].upper())
-    hist = C.get("hist") or [C["hist0"], ["This season so far, with prior", "%.3f" % rec["ml"], "%.3f" % rec["kl"]]]
+    hist = C.get("hist") or (([C["hist0"]] if C.get("hist0") else []) + [["This season so far, with prior", "%.3f" % rec["ml"], "%.3f" % rec["kl"]]])
     promoted = sorted(nm(t) for t in teams if t not in prior)
     return dict(name=C["name"], mw=("Next round \u00b7 times GMT" if up else "Next round not listed yet"), gp=(str(min(gps)) if min(gps) == max(gps) else "%d\u2013%d" % (min(gps), max(gps))),
                 nrel=C["nrel"], promoted=promoted, hist=hist, histTitle=C["histTitle"], histNote=C["histNote"],
@@ -204,7 +208,13 @@ def main(get=fetch_text, today=None, out_path="data.json"):
             else:
                 say("%s: skipped" % C["name"])
             continue
-        result[key] = build(key, cur, prev, fixtures)
+        try:
+            result[key] = build(key, cur, prev, fixtures)
+        except Exception as e:
+            say("%s: model failed (%s: %s)" % (C["name"], type(e).__name__, e))
+            if key in old:
+                result[key] = old[key]; say("%s: kept the previous data" % C["name"])
+            continue
         result[key]["season"] = label
         say("%s: %d matches, %d upcoming, season %s" % (C["name"], len(cur), len(result[key]["up"]), label))
     if not result:
