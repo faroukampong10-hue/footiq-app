@@ -25,13 +25,12 @@ LEAGUES = {
  "fr": dict(name="Ligue 1", f="F1", ng=34.0, prom=29.5, nrel=2, seed=19, lmode="prev", nm={},
    codes={"Angers":"ANG","Auxerre":"AUX","Brest":"BRE","Le Havre":"HAV","Le Mans":"LMN","Lens":"LEN","Lille":"LIL","Lorient":"LOR","Lyon":"LYO","Marseille":"MAR","Monaco":"MON","Nice":"NIC","Paris FC":"PFC","Paris SG":"PSG","Rennes":"REN","Strasbourg":"STR","Toulouse":"TOU","Troyes":"TRO"},
    histTitle="Check on Ligue 1",
-   histNote="Ligue 1 was added later, so there is only the check on this season so far. The settings were tuned on Premier League data and are copied from the Bundesliga, which also has 18 clubs and 34 games. The goal level comes from last season\u2019s average. The relegation chance counts the bottom two only, not the play-off place. Treat this as a small sample. "nl": dict(name="Eredivisie", f="N1", ng=34.0, prom=29.5, nrel=2, seed=23, lmode="prev",
+   histNote="Ligue 1 was added later, so there is only the check on this season so far. The settings were tuned on Premier League data and are copied from the Bundesliga, which also has 18 clubs and 34 games. The goal level comes from last season\u2019s average. The relegation chance counts the bottom two only, not the play-off place. Treat this as a small sample.}
    "nl": dict(name="Eredivisie", f="N1", ng=34.0, prom=29.5, nrel=2, seed=23, lmode="prev",
  nm={"For Sittard":"Fortuna Sittard","Go Ahead Eagles":"Go Ahead Eagles","Nijmegen":"NEC Nijmegen","Sp Rotterdam":"Sparta Rotterdam","Zwolle":"PEC Zwolle","Den Haag":"ADO Den Haag","PSV Eindhoven":"PSV"},
    codes={"ADO Den Haag":"ADO","Ajax":"AJA","AZ Alkmaar":"AZ","Cambuur":"CAM","Excelsior":"EXC","Feyenoord":"FEY","Fortuna Sittard":"FOR","Go Ahead Eagles":"GAE","Groningen":"GRO","Heerenveen":"HEE","NEC Nijmegen":"NEC","PEC Zwolle":"ZWO","PSV":"PSV","Sparta Rotterdam":"SPA","Telstar":"TEL","Twente":"TWE","Utrecht":"UTR","Willem II":"WIL"},
    histTitle="Check on Eredivisie",
    histNote="Eredivisie was added later, so there is only the check on this season so far. The settings were tuned on Premier League data and use the 18-club, 34-game format with last season's goal level. The relegation chance counts the bottom two only, not the play-off place. Treat this as a small sample."),
-"),
 }
 P = dict(w=0.6, c=0.16, k=8, hf=1.16, db=0.16)   # frozen model settings
 
