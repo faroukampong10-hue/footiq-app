@@ -283,6 +283,7 @@ const CO=[["CL","Champions League"],["PL","Premier League"],["PD","La Liga"],["S
 const KOF={PL:"pl",PD:"sp",SA:"it",BL1:"de",FL1:"fr",DED:"nl",PPL:"pt",ELC:"en2"};
 const LIVE=s=>s==="IN_PLAY"||s==="PAUSED"||s==="EXTRA_TIME"||s==="PENALTY_SHOOTOUT";
 let SD=0;const SC={};const NL_FIX={"FC Groningen":"Groningen","Willem II Tilburg":"Willem II","SBV Excelsior":"Excelsior","Telstar 1963":"Telstar","SC Cambuur-Leeuwarden":"Cambuur","SC Heerenveen":"Heerenveen","Feyenoord Rotterdam":"Feyenoord","AFC Ajax":"Ajax","FC Utrecht":"Utrecht","FC Twente":"Twente","FC Volendam":"Volendam","Heracles Almelo":"Heracles","RKC Waalwijk":"RKC Waalwijk","CS Marítimo":"Marítimo","FC Porto":"Porto","SL Benfica":"Benfica","SC Braga":"Braga","FC Arouca":"Arouca","FC Famalicão":"Famalicão","Moreirense FC":"Moreirense","Rio Ave FC":"Rio Ave","CD Santa Clara":"Santa Clara","GD Estoril Praia":"Estoril","CF Estrela da Amadora":"Estrela Amadora","FC Alverca":"Alverca","Académico de Viseu FC":"Academico Viseu","Wolverhampton Wanderers":"Wolverhampton","West Ham United":"West Ham","Bolton Wanderers":"Bolton","Lincoln City":"Lincoln"};
+const cl=x=>{const s=String(x||"").replace(/ (FC|AFC|CF)$/,"");return NL_FIX[s]||NL_FIX[x]||s};
 const nm=x=>esc2(q(String(x||"").replace(/ (FC|AFC|CF)$/,"")));
 function ago(ms){const s=Math.max(0,Math.round(ms/1000));return s<60?s+"s ago":s<3600?Math.floor(s/60)+"m ago":s<86400?Math.floor(s/3600)+"h ago":Math.floor(s/86400)+"d ago"}
 function dayStart(o){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+o);return d}
@@ -295,8 +296,7 @@ if(s==="POSTPONED")return["PP","var(--bad)"];
 if(s==="SUSPENDED")return["SUSP","var(--bad)"];
 if(s==="CANCELLED")return["CXL","var(--bad)"];
 return[String(s||"?"),"var(--mu)"]}
-function pred(m){if(m.status!=="TIMED"&&m.status!=="SCHEDULED")return"";const k=KOF[m.comp],L=k&&LG[k];const u=L&&L.up&&L.up.find(x=>x[2]===(NL_FIX[m.home]||m.home)&&x[3]===(NL_FIX[m.away]||m.away)
-);if(!u)return"";
+function pred(m){if(m.status!=="TIMED"&&m.status!=="SCHEDULED")return"";const k=KOF[m.comp],L=k&&LG[k];const u=L&&L.up&&L.up.find(x=>x[2]===cl(m.home)&&x[3]===cl(m.away));if(!u)return"";
 return'<div style="flex-basis:100%;padding-left:54px"><div style="max-width:220px">'+bar(u[4],u[5],u[6],6)+'</div><div class="s">Model: home '+Math.round(u[4])+"% \u00b7 draw "+Math.round(u[5])+"% \u00b7 away "+Math.round(u[6])+"%</div></div>"}
 function row(m){const s=lab(m),sc=m.home_goals==null||m.away_goals==null?"v":m.home_goals+" \u2013 "+m.away_goals;
 return'<div class="row" style="cursor:default;flex-wrap:wrap"><span style="width:46px;flex:none"><b style="font-size:12px;color:'+s[1]+'">'+esc2(s[0])+'</b></span><span style="flex:1;font-size:13px;font-weight:600">'+nm(m.home)+'</span><b style="font-size:15px">'+sc+'</b><span style="flex:1;text-align:right;font-size:13px;font-weight:600">'+nm(m.away)+"</span>"+pred(m)+"</div>"}
