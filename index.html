@@ -299,7 +299,7 @@ return[String(s||"?"),"var(--mu)"]}
 function pred(m){if(m.status!=="TIMED"&&m.status!=="SCHEDULED")return"";const k=KOF[m.comp],L=k&&LG[k];const u=L&&L.up&&L.up.find(x=>x[2]===cl(m.home)&&x[3]===cl(m.away));if(!u)return"";
 return'<div style="flex-basis:100%;padding-left:54px"><div style="max-width:220px">'+bar(u[4],u[5],u[6],6)+'</div><div class="s">Model: home '+Math.round(u[4])+"% \u00b7 draw "+Math.round(u[5])+"% \u00b7 away "+Math.round(u[6])+"%</div></div>"}
 function row(m){const s=lab(m),sc=m.home_goals==null||m.away_goals==null?"v":m.home_goals+" \u2013 "+m.away_goals;
-return'<div class="row" style="cursor:default;flex-wrap:wrap"><span style="width:46px;flex:none"><b style="font-size:12px;color:'+s[1]+'">'+esc2(s[0])+'</b></span><span style="flex:1;font-size:13px;font-weight:600">'+nm(m.home)+'</span><b style="font-size:15px">'+sc+'</b><span style="flex:1;text-align:right;font-size:13px;font-weight:600">'+nm(m.away)+"</span>"+pred(m)+"</div>"}
+return'<div class="row" data-mt="'+esc2([m.comp,m.home,m.away,m.utc_date,m.status,m.home_goals,m.away_goals].join("|"))+'" style="cursor:pointer;flex-wrap:wrap"><span style="width:46px;flex:none"><b style="font-size:12px;color:'+s[1]+'">'+esc2(s[0])+'</b></span><span style="flex:1;font-size:13px;font-weight:600">'+nm(m.home)+'</span><b style="font-size:15px">'+sc+'</b><span style="flex:1;text-align:right;font-size:13px;font-weight:600">'+nm(m.away)+"</span>"+pred(m)+"</div>"}
 function dayBar(){return'<div class="chips" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px">'+[-2,-1,0,1,2,3,4,5,6,7].map(o=>'<button data-sd="'+o+'" class="'+(o===SD?"on":"")+'" style="flex:none;white-space:nowrap">'+dayLabel(o)+"</button>").join("")+"</div>"}
 function paint(){const el=document.getElementById("sc");if(!el)return;const c=SC[SD];let h="";
 if(!c||!c.rows)h=c&&c.err?'<div class="note">Scores unavailable ('+esc2(c.err)+"). Trying again shortly.</div>":'<div class="s" style="margin-top:12px">Loading scores\u2026</div>';
@@ -326,6 +326,51 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-sd]");if(!
 document.querySelectorAll("[data-sd]").forEach(x=>x.classList.toggle("on",x===b));paint();const c=SC[SD];if(!c||Date.now()-c.t>=30000)load(SD)});
 setInterval(()=>{if(S.tab!=="scores"||document.visibilityState!=="visible")return;const c=SC[SD],age=Date.now()-(c?c.t:0);if(age>=(SD===0||SD===-1?30000:120000))load(SD);else paint()},5000);
 document.addEventListener("visibilitychange",()=>{if(S.tab==="scores"&&document.visibilityState==="visible"){const c=SC[SD];if(!c||Date.now()-c.t>=30000)load(SD)}});
+})();
+/* FootIQ add-on 4: match page (Overview and What if) opened by tapping a match on the Scores tab */
+(function(){
+const KOF={PL:"pl",PD:"sp",SA:"it",BL1:"de",FL1:"fr",DED:"nl",PPL:"pt",ELC:"en2"};
+const CN={CL:"Champions League",PL:"Premier League",PD:"La Liga",SA:"Serie A",BL1:"Bundesliga",FL1:"Ligue 1",ELC:"Championship",DED:"Eredivisie",PPL:"Primeira Liga"};
+const LIVE=s=>s==="IN_PLAY"||s==="PAUSED"||s==="EXTRA_TIME"||s==="PENALTY_SHOOTOUT";
+const og=n=>{const a=n%100;return n+(a>=11&&a<=13?"th":["th","st","nd","rd"][n%10]||"th")};
+const dn=(c,x)=>{x=String(x||"");return c==="CL"?x.replace(/ (FC|AFC|CF)$/,""):x};
+const kind=s=>LIVE(s)?"live":s==="FINISHED"||s==="AWARDED"?"done":"soon";
+let busy=false,TRY=0;
+function hdr(m){const d=new Date(m.utc),k=kind(m.status),sc=m.hg==null||m.ag==null?"v":m.hg+" \u2013 "+m.ag;
+const mid=k==="soon"?(isNaN(d)?"TBC":d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})):sc;
+const st=k==="live"?(m.status==="PAUSED"?"HT":"LIVE"):k==="done"?"Full time":isNaN(d)?"":d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
+const side=n=>'<div style="text-align:center;flex:1">'+bd(dn(m.comp,n),48)+'<div style="font-weight:700;margin-top:6px;font-size:14px">'+esc2(q(dn(m.comp,n)))+"</div></div>";
+return card('<div class="s" style="text-align:center">'+esc2(CN[m.comp]||m.comp)+'</div><div style="display:flex;align-items:center;margin-top:10px">'+side(m.home)+'<div style="text-align:center;min-width:92px"><div style="font:800 24px system-ui">'+esc2(mid)+'</div><div class="s" style="color:'+(k==="live"?"var(--ac)":"var(--mu)")+'">'+esc2(st)+"</div></div>"+side(m.away)+"</div>")}
+function mdl(m){const k=KOF[m.comp],L=k&&LG[k];if(!L)return null;
+if(kind(m.status)!=="done"){const i=L.up.findIndex(u=>u[2]===m.home&&u[3]===m.away);return i>=0?{k,L,i,u:L.up[i]}:{k,L}}
+const i=L.res.findIndex(r=>r[1]===m.home&&r[2]===m.away);return{k,L,r:i>=0?L.res[i]:null,p:i>=0?L.mr[i]:null}}
+function ov(m){const x=mdl(m);if(!x)return'<div class="note">No model for this competition yet. Score and time only.</div>';
+if(kind(m.status)!=="done"){if(!x.u)return'<div class="note">No prediction yet. football-data lists fixtures a day or two before the round.</div>';
+return detail(x.u).replace(/<button data-sim=[\s\S]*?<\/button>/,"")}
+if(!x.p)return'<div class="note">The model recap appears after the next data update (twice a day).</div>';
+const p=x.p,o=p[6],i={H:0,D:1,A:2}[o],w=o==="H"?"home win":o==="D"?"draw":"away win",rw=(l,a)=>'<tr><td class="t">'+l+"</td><td>"+Math.round(a[0])+"%</td><td>"+Math.round(a[1])+"%</td><td>"+Math.round(a[2])+"%</td></tr>";
+return card('<div style="font-weight:700">Result: '+w+" ("+x.r[3]+" \u2013 "+x.r[4]+')</div><table style="margin-top:8px"><thead><tr><th class="t">Before kick-off</th><th>Home</th><th>Draw</th><th>Away</th></tr></thead><tbody>'+rw("Model",p.slice(0,3))+rw("Market",p.slice(3,6))+'</tbody></table><div class="s" style="margin-top:8px">The model gave this result '+Math.round(p[i])+"%, the market "+Math.round(p[3+i])+"%. One match says little about a model, so see the Model tab for the whole season.</div>")}
+function wi(m){const x=mdl(m);if(!x||!x.u)return"";if(!S.sim||S.sim.i!==x.i)S.sim={i:x.i,ah:0,dh:0,aa:0,da:0,hf:1.16};
+return simPage().replace(/^<button data-t="matches"[\s\S]*?<\/button>/,"")}
+function page(){const m=S.mt,x=mdl(m),can=!!(x&&x.u),tab=m.tab==="wi"&&can?"wi":"ov";
+const tb=can?'<div class="chips"><button data-mtab="ov" class="'+(tab==="ov"?"on":"")+'">Overview</button><button data-mtab="wi" class="'+(tab==="wi"?"on":"")+'">What if</button></div>':"";
+document.getElementById("v").innerHTML=('<button data-mb="1" style="background:none;border:0;color:var(--ac);font:600 13px system-ui;padding:8px 0;min-height:44px">\u2039 Back</button><div id="mh">'+hdr(m)+"</div>"+tb+'<div id="mb">'+(tab==="wi"?wi(m):ov(m))+'</div><div class="s" style="margin-top:8px">Scores can run about 5 minutes behind.</div>').replace(/(\d+)th( \u00b7 )/g,(a,n,r)=>og(+n)+r).replace(/Nott'm/g,"Nott\u2019m")}
+const R3=render;
+render=function(){if(S.tab!=="match"){R3();return}
+S.tab="matches";try{R3()}finally{S.tab="match"}
+document.querySelectorAll("#n button").forEach(b=>b.classList.toggle("on",b.dataset.t===(S.mf||"scores")));
+try{page()}catch(e){}};
+async function load(){const m=S.mt;if(busy||!m)return;busy=true;TRY=Date.now();const c=new AbortController(),to=setTimeout(()=>c.abort(),8000);
+try{const r=await fetch(SB.url+"/rest/v1/live_board?select=status,home_goals,away_goals&limit=1&comp=eq."+m.comp+"&home=eq."+encodeURIComponent(m.home)+"&away=eq."+encodeURIComponent(m.away)+"&utc_date=eq."+encodeURIComponent(m.utc),{headers:{apikey:SB.key},signal:c.signal});
+if(r.ok){const j=await r.json();if(j[0]&&S.tab==="match"&&S.mt===m){const ch=kind(j[0].status)!==kind(m.status);m.status=j[0].status;m.hg=j[0].home_goals;m.ag=j[0].away_goals;if(ch)render();else{const h=document.getElementById("mh");if(h)h.innerHTML=hdr(m)}}}}catch(e){}
+clearTimeout(to);busy=false}
+document.addEventListener("click",e=>{const r=e.target.closest("[data-mt]");
+if(r){const a=r.dataset.mt.split("|");S.mt={comp:a[0],home:a[1],away:a[2],utc:a[3],status:a[4],hg:a[5]===""?null:+a[5],ag:a[6]===""?null:+a[6],tab:"ov"};
+S.mf=S.tab;const k=KOF[a[0]];if(k&&LG[k]){K=k;D=LG[k];CODE=D.codes;build();S.open=null;S.team=null}
+S.sim=null;S.tab="match";window.scrollTo(0,0);TRY=0;render();return}
+const t=e.target.closest("[data-mtab]");if(t&&S.tab==="match"){S.mt.tab=t.dataset.mtab;render();return}
+if(e.target.closest("[data-mb]")){S.tab=S.mf||"scores";window.scrollTo(0,0);render()}});
+setInterval(()=>{if(S.tab==="match"&&document.visibilityState==="visible"&&Date.now()-TRY>=30000)load()},5000);
 })();
 })();
 init();
