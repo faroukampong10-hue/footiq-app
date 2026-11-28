@@ -279,12 +279,12 @@ const R1=render;render=function(){R1();try{post()}catch(e){}};
 setInterval(()=>{if(want()&&Date.now()-XTRY>=30000)load()},5000);
 document.addEventListener("visibilitychange",()=>{if(want()&&Date.now()-XTRY>=30000)load()});/* FootIQ add-on 3: Scores tab with day bar, all competitions, predictions where the model has them */
 (function(){
-const CO=[["CL","Champions League"],["PL","Premier League"],["PD","La Liga"],["SA","Serie A"],["BL1","Bundesliga"],["ELC","Championship"],["DED","Eredivisie"],["PPL","Primeira Liga"]];
+const CO=[["CL","Champions League"],["PL","Premier League"],["PD","La Liga"],["SA","Serie A"],["FL1","Ligue 1"],["BL1","Bundesliga"],["ELC","Championship"],["DED","Eredivisie"],["PPL","Primeira Liga"]];
 const KOF={PL:"pl",PD:"sp",SA:"it",BL1:"de",FL1:"fr",DED:"nl",PPL:"pt",ELC:"en2"};
 const LIVE=s=>s==="IN_PLAY"||s==="PAUSED"||s==="EXTRA_TIME"||s==="PENALTY_SHOOTOUT";
 let SD=0;const SC={};const NL_FIX={"FC Groningen":"Groningen","Willem II Tilburg":"Willem II","SBV Excelsior":"Excelsior","Telstar 1963":"Telstar","SC Cambuur-Leeuwarden":"Cambuur","SC Heerenveen":"Heerenveen","Feyenoord Rotterdam":"Feyenoord","AFC Ajax":"Ajax","FC Utrecht":"Utrecht","FC Twente":"Twente","FC Volendam":"Volendam","Heracles Almelo":"Heracles","RKC Waalwijk":"RKC Waalwijk","CS Marítimo":"Marítimo","FC Porto":"Porto","SL Benfica":"Benfica","SC Braga":"Braga","FC Arouca":"Arouca","FC Famalicão":"Famalicão","Moreirense FC":"Moreirense","Rio Ave FC":"Rio Ave","CD Santa Clara":"Santa Clara","GD Estoril Praia":"Estoril","CF Estrela da Amadora":"Estrela Amadora","FC Alverca":"Alverca","Académico de Viseu FC":"Academico Viseu","Wolverhampton Wanderers":"Wolverhampton","West Ham United":"West Ham","Bolton Wanderers":"Bolton","Lincoln City":"Lincoln"};
-const cl=x=>{const s=String(x||"").replace(/ (FC|AFC|CF)$/,"");return NL_FIX[s]||NL_FIX[x]||s};
-const nm=x=>esc2(q(String(x||"").replace(/ (FC|AFC|CF)$/,"")));
+const cl=x=>{const o=String(x||"");if(o==="Paris FC")return o;const s=o.replace(/ (FC|AFC|CF)$/,"");return NL_FIX[s]||NL_FIX[o]||s};
+const nm=x=>esc2(q(cl(x)));
 function ago(ms){const s=Math.max(0,Math.round(ms/1000));return s<60?s+"s ago":s<3600?Math.floor(s/60)+"m ago":s<86400?Math.floor(s/3600)+"h ago":Math.floor(s/86400)+"d ago"}
 function dayStart(o){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+o);return d}
 function dayLabel(o){return o===0?"Today":o===1?"Tomorrow":o===-1?"Yesterday":dayStart(o).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
